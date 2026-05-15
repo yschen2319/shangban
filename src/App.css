@@ -1,39 +1,58 @@
 .app {
   position: relative;
+  display: grid;
   min-height: 100vh;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 48% 35%, rgba(255, 255, 255, 0.98), rgba(246, 243, 238, 0.78) 34%, rgba(233, 229, 221, 0.94) 72%),
-    #f4f1eb;
+  place-items: center;
+  background: #ede8df;
   color: #111113;
 }
 
 .app::before {
   position: absolute;
-  inset: auto 8vw 11vh;
-  height: 18vh;
-  border-radius: 50%;
-  background: rgba(61, 52, 41, 0.1);
-  filter: blur(42px);
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% 36%, rgba(255, 255, 255, 0.72), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(220, 213, 202, 0.54));
   content: "";
 }
 
-.scene-layer {
+.cat-video-button {
   position: absolute;
   inset: 0;
   z-index: 1;
-}
-
-.cat-scene,
-.cat-canvas {
   width: 100%;
   height: 100%;
-}
-
-.cat-canvas {
-  display: block;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.cat-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 44%;
+  filter: saturate(1.04) contrast(1.04) brightness(1.02);
+  transform: scale(1.03);
+}
+
+.cat-video-button::after {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 35%, transparent 0 38%, rgba(237, 232, 223, 0.14) 62%, rgba(237, 232, 223, 0.58) 100%),
+    linear-gradient(180deg, rgba(237, 232, 223, 0.06) 0%, transparent 44%, rgba(237, 232, 223, 0.22) 100%);
+  content: "";
+  pointer-events: none;
+}
+
+.cat-video-button.reacting .cat-video {
+  animation: catNudge 620ms ease;
 }
 
 .brand-mark {
@@ -41,11 +60,12 @@
   top: clamp(18px, 3vw, 34px);
   left: clamp(18px, 3vw, 34px);
   z-index: 2;
-  color: rgba(17, 17, 19, 0.42);
+  color: rgba(17, 17, 19, 0.52);
   font-size: 0.78rem;
   font-weight: 760;
   letter-spacing: 0;
   text-transform: uppercase;
+  pointer-events: none;
 }
 
 .clock-dock {
@@ -65,9 +85,9 @@
   padding: 6px 12px;
   border: 1px solid rgba(17, 17, 19, 0.09);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.46);
+  background: rgba(255, 255, 255, 0.58);
   box-shadow: 0 12px 34px rgba(39, 37, 34, 0.08);
-  color: rgba(17, 17, 19, 0.58);
+  color: rgba(17, 17, 19, 0.66);
   font-size: 0.76rem;
   font-weight: 720;
   backdrop-filter: blur(18px);
@@ -145,11 +165,25 @@
 }
 
 .flip-label {
-  color: rgba(17, 17, 19, 0.43);
+  color: rgba(17, 17, 19, 0.52);
   font-size: 0.7rem;
   font-weight: 760;
   letter-spacing: 0;
   text-align: center;
+}
+
+@keyframes catNudge {
+  0% {
+    transform: scale(1.03);
+  }
+
+  42% {
+    transform: scale(1.075) translateY(-1.2%);
+  }
+
+  100% {
+    transform: scale(1.03);
+  }
 }
 
 @keyframes flipTick {
@@ -170,6 +204,10 @@
 }
 
 @media (max-width: 720px) {
+  .cat-video {
+    object-position: center center;
+  }
+
   .clock-dock {
     bottom: 18px;
     width: calc(100vw - 20px);

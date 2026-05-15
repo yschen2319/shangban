@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
-import CatScene from './CatScene';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
 
 type WorkStage = 'before' | 'working' | 'after';
@@ -21,6 +20,8 @@ const DEFAULT_SETTINGS: Settings = {
   workStartTime: '09:00',
   workEndTime: '18:00',
 };
+
+const meowSources = ['/media/meow-young-female.ogg', '/media/meow-pleading.oga'];
 
 function isTimeValue(value: unknown): value is string {
   return typeof value === 'string' && /^\d{2}:\d{2}$/.test(value);
@@ -128,12 +129,84 @@ export default function App() {
     [now, settings.workEndTime, settings.workStartTime],
   );
   const clock = getClockParts(timeState.remainingMs);
+  const meowRefs = useRef<HTMLAudioElement[]>([]);
+  const purrRef = useRef<HTMLAudioElement>(null);
+  const pressTimerRef = useRef<number | null>(null);
+  const [isReacting, setIsReacting] = useState(false);
+
+  const clearPressTimer = () => {
+    if (pressTimerRef.current) {
+      window.clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  };
+
+  const playMeow = () => {
+    const sourceIndex = Math.floor(Math.random() * meowRefs.current.length);
+    const audio = meowRefs.current[sourceIndex];
+    if (!audio) {
+      return;
+    }
+
+    audio.pause();
+    audio.currentTime = sourceIndex === 1 ? Math.random() * 5.5 : 0;
+    audio.volume = 0.84;
+    void audio.play();
+    setIsReacting(true);
+    window.setTimeout(() => setIsReacting(false), 620);
+  };
+
+  const playPurr = () => {
+    const audio = purrRef.current;
+    if (!audio) {
+      return;
+    }
+
+    audio.pause();
+    audio.currentTime = Math.random() * 3.5;
+    audio.volume = 0.62;
+    void audio.play();
+    setIsReacting(true);
+    window.setTimeout(() => setIsReacting(false), 980);
+  };
 
   return (
     <main className="app" data-stage={timeState.stage}>
-      <div className="scene-layer" aria-label="可交互立体三花猫">
-        <CatScene stage={timeState.stage} />
-      </div>
+      <button
+        className={isReacting ? 'cat-video-button reacting' : 'cat-video-button'}
+        type="button"
+        aria-label="点击真实三花猫"
+        onClick={playMeow}
+        onDoubleClick={playPurr}
+        onPointerDown={() => {
+          clearPressTimer();
+          pressTimerRef.current = window.setTimeout(playPurr, 520);
+        }}
+        onPointerLeave={clearPressTimer}
+        onPointerUp={clearPressTimer}
+      >
+        <video
+          className="cat-video"
+          src="/media/calico-cat-shadow.webm"
+          autoPlay
+          loop
+          muted
+          playsInline
+          aria-hidden="true"
+        />
+      </button>
+
+      <audio ref={(node) => {
+        if (node) {
+          meowRefs.current[0] = node;
+        }
+      }} src={meowSources[0]} preload="auto" />
+      <audio ref={(node) => {
+        if (node) {
+          meowRefs.current[1] = node;
+        }
+      }} src={meowSources[1]} preload="auto" />
+      <audio ref={purrRef} src="/media/purring-cat.oga" preload="auto" />
 
       <div className="brand-mark" aria-label="Shangban">
         Shangban
