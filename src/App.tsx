@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
 
 type WorkStage = 'before' | 'working' | 'after';
+type PetMood = 'idle' | 'curious' | 'paw' | 'happy' | 'purr' | 'sleepy';
 
 type Settings = {
   workStartTime: string;
@@ -21,7 +22,12 @@ const DEFAULT_SETTINGS: Settings = {
   workEndTime: '18:00',
 };
 
-const meowSources = ['/media/meow-young-female.ogg', '/media/meow-pleading.oga'];
+const soundMap = {
+  curious: '/media/meow-short.ogg',
+  paw: '/media/meow-young-female.ogg',
+  happy: '/media/meow-pleading.oga',
+  purr: '/media/purring-cat.oga',
+} as const;
 
 function isTimeValue(value: unknown): value is string {
   return typeof value === 'string' && /^\d{2}:\d{2}$/.test(value);
@@ -129,10 +135,23 @@ export default function App() {
     [now, settings.workEndTime, settings.workStartTime],
   );
   const clock = getClockParts(timeState.remainingMs);
-  const meowRefs = useRef<HTMLAudioElement[]>([]);
-  const purrRef = useRef<HTMLAudioElement>(null);
+  const [mood, setMood] = useState<PetMood>('idle');
+  const [toast, setToast] = useState('');
+  const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   const pressTimerRef = useRef<number | null>(null);
-  const [isReacting, setIsReacting] = useState(false);
+  const moodTimerRef = useRef<number | null>(null);
+  const didLongPressRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (pressTimerRef.current) {
+        window.clearTimeout(pressTimerRef.current);
+      }
+      if (moodTimerRef.current) {
+        window.clearTimeout(moodTimerRef.current);
+      }
+    };
+  }, []);
 
   const clearPressTimer = () => {
     if (pressTimerRef.current) {
@@ -141,72 +160,85 @@ export default function App() {
     }
   };
 
-  const playMeow = () => {
-    const sourceIndex = Math.floor(Math.random() * meowRefs.current.length);
-    const audio = meowRefs.current[sourceIndex];
-    if (!audio) {
-      return;
+  const resetMoodLater = (delay = 1200) => {
+    if (moodTimerRef.current) {
+      window.clearTimeout(moodTimerRef.current);
     }
-
-    audio.pause();
-    audio.currentTime = sourceIndex === 1 ? Math.random() * 5.5 : 0;
-    audio.volume = 0.84;
-    void audio.play();
-    setIsReacting(true);
-    window.setTimeout(() => setIsReacting(false), 620);
+    moodTimerRef.current = window.setTimeout(() => {
+      setMood('idle');
+      setToast('');
+    }, delay);
   };
 
-  const playPurr = () => {
-    const audio = purrRef.current;
+  const playSound = (key: keyof typeof soundMap) => {
+    const audio = audioRefs.current[key];
     if (!audio) {
       return;
     }
 
     audio.pause();
-    audio.currentTime = Math.random() * 3.5;
-    audio.volume = 0.62;
+    audio.currentTime = key === 'happy' ? Math.random() * 5.2 : 0;
+    audio.volume = key === 'purr' ? 0.58 : 0.82;
     void audio.play();
-    setIsReacting(true);
-    window.setTimeout(() => setIsReacting(false), 980);
+  };
+
+  const runMood = (nextMood: PetMood, sound: keyof typeof soundMap, nextToast: string, duration = 1300) => {
+    setMood(nextMood);
+    setToast(nextToast);
+    playSound(sound);
+    resetMoodLater(duration);
   };
 
   return (
     <main className="app" data-stage={timeState.stage}>
       <button
-        className={isReacting ? 'cat-video-button reacting' : 'cat-video-button'}
+        className="pet-stage"
+        data-mood={mood}
         type="button"
-        aria-label="点击真实三花猫"
-        onClick={playMeow}
-        onDoubleClick={playPurr}
+        aria-label="独立三花猫桌宠"
+        onClick={() => {
+          if (didLongPressRef.current) {
+            didLongPressRef.current = false;
+            return;
+          }
+          runMood('paw', 'paw', '真棒');
+        }}
+        onDoubleClick={() => runMood('happy', 'happy', '再夸一次')}
         onPointerDown={() => {
           clearPressTimer();
-          pressTimerRef.current = window.setTimeout(playPurr, 520);
+          didLongPressRef.current = false;
+          pressTimerRef.current = window.setTimeout(() => {
+            didLongPressRef.current = true;
+            runMood('purr', 'purr', '呼噜呼噜', 1900);
+          }, 520);
         }}
-        onPointerLeave={clearPressTimer}
+        onPointerEnter={() => mood === 'idle' && setMood('curious')}
+        onPointerLeave={() => {
+          clearPressTimer();
+          mood === 'curious' && setMood('idle');
+        }}
         onPointerUp={clearPressTimer}
       >
-        <video
-          className="cat-video"
-          src="/media/calico-cat-shadow.webm"
-          autoPlay
-          loop
-          muted
-          playsInline
-          aria-hidden="true"
-        />
+        <span className="pet-shadow" aria-hidden="true" />
+        <span className="pet-wrap">
+          <img className="pet-image" src="/assets/calico-pet.png" alt="" draggable="false" />
+          <span className="pet-paw" aria-hidden="true" />
+        </span>
+        <span className={toast ? 'pet-toast visible' : 'pet-toast'} aria-live="polite">
+          {toast}
+        </span>
       </button>
 
-      <audio ref={(node) => {
-        if (node) {
-          meowRefs.current[0] = node;
-        }
-      }} src={meowSources[0]} preload="auto" />
-      <audio ref={(node) => {
-        if (node) {
-          meowRefs.current[1] = node;
-        }
-      }} src={meowSources[1]} preload="auto" />
-      <audio ref={purrRef} src="/media/purring-cat.oga" preload="auto" />
+      {(Object.entries(soundMap) as Array<[keyof typeof soundMap, string]>).map(([key, src]) => (
+        <audio
+          key={key}
+          ref={(node) => {
+            audioRefs.current[key] = node;
+          }}
+          src={src}
+          preload="auto"
+        />
+      ))}
 
       <div className="brand-mark" aria-label="Shangban">
         Shangban
