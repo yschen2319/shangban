@@ -14,10 +14,9 @@
 ## 素材来源
 
 - `calico-pet.png`: AI-generated project asset, chroma-key processed to transparent PNG.
-- `Meow.ogg`: Wikimedia Commons, author Dcrosby, CC BY-SA 3.0.
-- `Meow of a pleading cat.oga`: Wikimedia Commons, author Heismark, public domain.
-- `Maullido de gata hembra joven.ogg`: Wikimedia Commons, author George Miquilena, CC0 1.0.
-- `Purring cat.oga`: Wikimedia Commons, author Mysid, public domain.
+- `cat-meow-soft.ogg`: BigSoundBank / LaSonotheque sound #1890, author Joseph Sardin, CC0 public domain.
+- `cat-meow-long.ogg`: BigSoundBank / LaSonotheque sound #1901, author Joseph Sardin, CC0 public domain.
+- `cat-purr-clean.mp3`: BigSoundBank / LaSonotheque sound #0436, author Joseph Sardin, CC0 public domain.
 
 ## 本地开发
 

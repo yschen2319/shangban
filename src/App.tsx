@@ -23,10 +23,9 @@ const DEFAULT_SETTINGS: Settings = {
 };
 
 const soundMap = {
-  curious: '/media/meow-short.ogg',
-  paw: '/media/meow-young-female.ogg',
-  happy: '/media/meow-pleading.oga',
-  purr: '/media/purring-cat.oga',
+  paw: '/media/cat-meow-soft.ogg',
+  happy: '/media/cat-meow-long.ogg',
+  purr: '/media/cat-purr-clean.mp3',
 } as const;
 
 function isTimeValue(value: unknown): value is string {
@@ -177,7 +176,7 @@ export default function App() {
     }
 
     audio.pause();
-    audio.currentTime = key === 'happy' ? Math.random() * 5.2 : 0;
+    audio.currentTime = key === 'happy' ? Math.random() * 2.2 : 0;
     audio.volume = key === 'purr' ? 0.58 : 0.82;
     void audio.play();
   };
